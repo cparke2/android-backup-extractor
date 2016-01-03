@@ -61,9 +61,15 @@ More details about the backup format and the tool implementation in the [associa
   - *(you can try restoring manually via `adb push` and `adb shell`)*
 - Errors are only printed to logcat, look out for `BackupManagerService`.
 
-The safest way to pack a tar archive is to get the list of files from the original backup.tar file:
+The safest way to pack a tar archive is to get the list of files from the original backup.tar file.
+But, you can’t just use the file list output from tar, since it includes subdirectories too!  Those need to be REMOVED!!!
+
+Here’s a BASH script snippet that can properly generate the list of files using tar *after* you have already extracted them to local disk:
 ```shell
-tar tf backup.tar | grep -F "com.package.name" > package.list
+> package.list
+while read n; do
+   [ ! -d "$n"  ] && echo $n >> package.list
+done < <(tar tf backup.tar | grep -F "com.package.name")
 ```
 And then use that list to build the tar file. In the extracted backup directory:
 ```shell
